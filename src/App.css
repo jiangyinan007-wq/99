@@ -393,7 +393,7 @@ code {
 }
 
 .orderTable {
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid #e5ebf3;
   border-radius: 8px;
 }
@@ -402,10 +402,11 @@ code {
 .orderTableRow {
   display: grid;
   grid-template-columns:
-    minmax(150px, 0.9fr) minmax(130px, 0.8fr) minmax(150px, 0.9fr) 86px 100px 72px minmax(220px, 1.3fr)
-    minmax(210px, 1.15fr) 110px 74px;
+    minmax(140px, 0.85fr) minmax(90px, 0.55fr) minmax(130px, 0.8fr) 78px 92px 68px
+    minmax(210px, 1.15fr) minmax(190px, 1fr) 108px 86px;
   gap: 12px;
   align-items: center;
+  min-width: 1260px;
 }
 
 .orderTableHead {
@@ -456,9 +457,14 @@ code {
 
 .countryCell,
 .channelCell,
+.objectCell,
 .countCell strong {
   color: #172033;
   font-weight: 800;
+}
+
+.objectCell {
+  color: #ef4444;
 }
 
 .channelCell {
@@ -568,14 +574,28 @@ code {
 
 .miniLinkLine {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 48px;
+  grid-template-columns: minmax(0, 1fr) 48px;
   align-items: center;
   gap: 8px;
 }
 
-.miniLinkLine span {
-  color: #ef4444;
+.actionCell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.editButton {
+  height: 34px;
+  min-width: 68px;
+  border: 1px solid #cfd7e6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #28364d;
   font-weight: 800;
+}
+
+.editButton:hover {
+  border-color: #aeb9cb;
 }
 
 .orderEditForm {
@@ -750,7 +770,7 @@ code {
   .linkItemRow,
   .orderTableHead,
   .orderTableRow {
-    min-width: 980px;
+    min-width: 1260px;
   }
 
   .orderEditForm {

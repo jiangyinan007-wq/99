@@ -651,6 +651,7 @@ function App() {
             <div className="orderTable">
               <div className="orderTableHead">
                 <span>账户 ID</span>
+                <span>使用对象</span>
                 <span>账户 SID</span>
                 <span>商品国家</span>
                 <span>充值渠道</span>
@@ -677,6 +678,8 @@ function App() {
                       </small>
                     </div>
 
+                    <div className="objectCell">{order.accountId}</div>
+
                     <div className="sidLine">
                       {order.sids.map((sid) => (
                         <span key={sid}>{sid}</span>
@@ -691,9 +694,8 @@ function App() {
                     </div>
 
                     <div className="linkListCell">
-                      {order.links.map((link, index) => (
+                      {order.links.map((link) => (
                         <div className="miniLinkLine" key={link.id}>
-                          <span>链接{index + 1}</span>
                           <a href={link.rechargeUrl} target="_blank">
                             {link.rechargeUrl}
                           </a>
@@ -731,8 +733,8 @@ function App() {
                       )}
                     </div>
 
-                    <div>
-                      <button type="button" className="statusButton" onClick={() => openDetail(order.id)}>
+                    <div className="actionCell">
+                      <button type="button" className="editButton" onClick={() => openDetail(order.id)}>
                         编辑
                       </button>
                     </div>
