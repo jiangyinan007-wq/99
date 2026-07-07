@@ -116,6 +116,8 @@ function App() {
   const [country, setCountry] = useState('ID')
   const [quantity, setQuantity] = useState(1)
   const [appendQuantity, setAppendQuantity] = useState(1)
+  const [editingSids, setEditingSids] = useState(false)
+  const [editSidInput, setEditSidInput] = useState('')
   const [filter, setFilter] = useState<'全部' | LinkStatus>('全部')
   const [copied, setCopied] = useState('')
 
@@ -195,9 +197,33 @@ function App() {
   }
 
   function openDetail(orderId: string) {
+    const order = orders.find((item) => item.id === orderId)
     setSelectedOrderId(orderId)
     setAppendQuantity(1)
+    setEditingSids(false)
+    setEditSidInput(order?.sids.join(', ') ?? '')
     setPageMode('detail')
+  }
+
+  function startEditSids() {
+    if (!selectedOrder) return
+    setEditSidInput(selectedOrder.sids.join(', '))
+    setEditingSids(true)
+  }
+
+  function saveSids(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedOrder) return
+
+    const nextSids = normalizeSids(editSidInput)
+    if (nextSids.length === 0) return
+
+    setOrders((current) =>
+      current.map((order) =>
+        order.id === selectedOrder.id ? { ...order, sids: nextSids } : order,
+      ),
+    )
+    setEditingSids(false)
   }
 
   function appendLinks(event: FormEvent<HTMLFormElement>) {
@@ -488,12 +514,38 @@ function App() {
 
               <div className="orderSummary">
                 <div>
-                  <span>账户 SID</span>
-                  <div className="sidLine">
-                    {selectedOrder.sids.map((sid) => (
-                      <span key={sid}>{sid}</span>
-                    ))}
+                  <div className="summaryTitle">
+                    <span>账户 SID</span>
+                    {!editingSids && (
+                      <button type="button" onClick={startEditSids}>
+                        编辑 SID
+                      </button>
+                    )}
                   </div>
+                  {editingSids ? (
+                    <form className="sidEditForm" onSubmit={saveSids}>
+                      <textarea
+                        value={editSidInput}
+                        onChange={(event) => setEditSidInput(event.target.value)}
+                        rows={3}
+                        required
+                      />
+                      <div className="inlineActions">
+                        <button type="button" className="ghostButton" onClick={() => setEditingSids(false)}>
+                          取消
+                        </button>
+                        <button type="submit" className="primaryButton">
+                          保存 SID
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="sidLine">
+                      {selectedOrder.sids.map((sid) => (
+                        <span key={sid}>{sid}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <span>指定国家</span>
@@ -551,34 +603,89 @@ function App() {
               </div>
             </div>
 
-            <div className="orderList">
-              {filteredOrders.map((order) => (
-                <article className="orderCard" key={order.id}>
-                  <div className="orderCardHead">
-                    <div>
-                      <div className="orderTitle">
-                        <strong>{order.target}</strong>
-                        <code>{order.id}</code>
-                      </div>
-                      <p>
-                        {order.country} · {order.sids.length} 个 SID · 创建人 {order.creator} ·{' '}
-                        {order.createdAt}
-                      </p>
+            <div className="orderTable">
+              <div className="orderTableHead">
+                <span>使用对象</span>
+                <span>账户 SID</span>
+                <span>国家</span>
+                <span>链接数</span>
+                <span>充值链接</span>
+                <span>流水记录</span>
+                <span>状态</span>
+                <span>操作</span>
+              </div>
+
+              {filteredOrders.map((order) => {
+                const firstLink = order.links[0]
+                const activeLinks = order.links.filter((link) => link.status === '使用中').length
+
+                return (
+                  <article className="orderTableRow" key={order.id}>
+                    <div className="targetCell">
+                      <strong>{order.target}</strong>
+                      <code>{order.id}</code>
+                      <small>
+                        创建人 {order.creator} · {order.createdAt}
+                      </small>
                     </div>
-                    <button type="button" className="statusButton" onClick={() => openDetail(order.id)}>
-                      查看 / 继续生成
-                    </button>
-                  </div>
 
-                  <div className="sidLine orderSidLine">
-                    {order.sids.map((sid) => (
-                      <span key={sid}>{sid}</span>
-                    ))}
-                  </div>
+                    <div className="sidLine">
+                      {order.sids.map((sid) => (
+                        <span key={sid}>{sid}</span>
+                      ))}
+                    </div>
 
-                  {renderLinkTable(order, true)}
-                </article>
-              ))}
+                    <div className="countryCell">{order.country}</div>
+                    <div className="countCell">
+                      <strong>{order.links.length}</strong>
+                      <small>条链接</small>
+                    </div>
+
+                    <div className="urlCell">
+                      <a href={firstLink.rechargeUrl} target="_blank">
+                        {firstLink.rechargeUrl}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyText(firstLink.rechargeUrl, `${firstLink.id} 充值链接`)}
+                      >
+                        复制
+                      </button>
+                      {order.links.length > 1 && <small>另有 {order.links.length - 1} 条</small>}
+                    </div>
+
+                    <div className="urlCell">
+                      <a href={firstLink.recordUrl} target="_blank">
+                        {firstLink.recordUrl}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyText(firstLink.recordUrl, `${firstLink.id} 流水链接`)}
+                      >
+                        复制
+                      </button>
+                      <small>
+                        {firstLink.orderCount} 笔 · {firstLink.lastUsed}
+                      </small>
+                    </div>
+
+                    <div>
+                      <span className="status activeStatus">
+                        {activeLinks} 使用中
+                      </span>
+                      {activeLinks < order.links.length && (
+                        <small className="mutedLine">{order.links.length - activeLinks} 已禁用</small>
+                      )}
+                    </div>
+
+                    <div>
+                      <button type="button" className="statusButton" onClick={() => openDetail(order.id)}>
+                        编辑
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           </section>
         )}
