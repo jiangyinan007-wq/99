@@ -13,6 +13,7 @@ type RechargeLink = {
   createdAt: string
   lastUsed: string
   orderCount: number
+  successAmount: number
 }
 
 type CreateOrder = {
@@ -44,6 +45,7 @@ const initialOrders: CreateOrder[] = [
         createdAt: '2026-07-01 13:42',
         lastUsed: '6 分钟前',
         orderCount: 24,
+        successAmount: 3880,
       },
       {
         id: 'NS-240701-019',
@@ -53,6 +55,7 @@ const initialOrders: CreateOrder[] = [
         createdAt: '2026-07-01 13:45',
         lastUsed: '22 分钟前',
         orderCount: 8,
+        successAmount: 960,
       },
     ],
   },
@@ -73,6 +76,7 @@ const initialOrders: CreateOrder[] = [
         createdAt: '2026-07-01 11:18',
         lastUsed: '31 分钟前',
         orderCount: 13,
+        successAmount: 1720,
       },
     ],
   },
@@ -93,6 +97,7 @@ const initialOrders: CreateOrder[] = [
         createdAt: '2026-06-30 20:07',
         lastUsed: '昨天',
         orderCount: 2,
+        successAmount: 120,
       },
     ],
   },
@@ -133,9 +138,6 @@ function App() {
   const sidPreview = useMemo(() => normalizeSids(sidInput), [sidInput])
   const selectedOrder = orders.find((order) => order.id === selectedOrderId) ?? orders[0]
   const allLinks = orders.flatMap((order) => order.links)
-  const activeCount = allLinks.filter((link) => link.status === '使用中').length
-  const disabledCount = allLinks.length - activeCount
-  const totalOrders = allLinks.reduce((sum, link) => sum + link.orderCount, 0)
   const filteredOrders = orders
     .map((order) => ({
       ...order,
@@ -168,6 +170,7 @@ function App() {
         createdAt: stamp,
         lastUsed: '未使用',
         orderCount: 0,
+        successAmount: 0,
       }
     })
   }
@@ -399,29 +402,6 @@ function App() {
             )}
           </div>
         </header>
-
-        {pageMode !== 'detail' && (
-          <section className="metrics" aria-label="链接概况">
-            <div>
-              <span>创建单数</span>
-              <strong>{orders.length}</strong>
-            </div>
-            <div>
-              <span>链接总数</span>
-              <strong>{allLinks.length}</strong>
-            </div>
-            <div>
-              <span>使用中 / 已禁用</span>
-              <strong>
-                {activeCount} / {disabledCount}
-              </strong>
-            </div>
-            <div>
-              <span>流水笔数</span>
-              <strong>{totalOrders}</strong>
-            </div>
-          </section>
-        )}
 
         {pageMode === 'create' && (
           <section className="createFlow">
@@ -684,6 +664,8 @@ function App() {
               {filteredOrders.map((order) => {
                 const firstLink = order.links[0]
                 const activeLinks = order.links.filter((link) => link.status === '使用中').length
+                const totalRecordCount = order.links.reduce((sum, link) => sum + link.orderCount, 0)
+                const totalSuccessAmount = order.links.reduce((sum, link) => sum + link.successAmount, 0)
 
                 return (
                   <article className="orderTableRow" key={order.id}>
@@ -708,20 +690,24 @@ function App() {
                       <small>条链接</small>
                     </div>
 
-                    <div className="urlCell">
-                      <a href={firstLink.rechargeUrl} target="_blank">
-                        {firstLink.rechargeUrl}
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => copyText(firstLink.rechargeUrl, `${firstLink.id} 充值链接`)}
-                      >
-                        复制
-                      </button>
-                      {order.links.length > 1 && <small>另有 {order.links.length - 1} 条</small>}
+                    <div className="linkListCell">
+                      {order.links.map((link, index) => (
+                        <div className="miniLinkLine" key={link.id}>
+                          <span>链接{index + 1}</span>
+                          <a href={link.rechargeUrl} target="_blank">
+                            {link.rechargeUrl}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyText(link.rechargeUrl, `${link.id} 充值链接`)}
+                          >
+                            复制
+                          </button>
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="urlCell">
+                    <div className="recordCell">
                       <a href={firstLink.recordUrl} target="_blank">
                         {firstLink.recordUrl}
                       </a>
@@ -732,7 +718,7 @@ function App() {
                         复制
                       </button>
                       <small>
-                        {firstLink.orderCount} 笔 · {firstLink.lastUsed}
+                        {totalRecordCount} 笔 · 累计成功 {totalSuccessAmount.toLocaleString()} USD
                       </small>
                     </div>
 

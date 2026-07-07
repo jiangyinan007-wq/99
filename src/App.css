@@ -402,8 +402,8 @@ code {
 .orderTableRow {
   display: grid;
   grid-template-columns:
-    minmax(150px, 0.85fr) minmax(150px, 0.9fr) 86px 100px 72px minmax(150px, 1fr)
-    minmax(150px, 1fr) 110px 74px;
+    minmax(150px, 0.9fr) minmax(130px, 0.8fr) minmax(150px, 0.9fr) 86px 100px 72px minmax(220px, 1.3fr)
+    minmax(210px, 1.15fr) 110px 74px;
   gap: 12px;
   align-items: center;
 }
@@ -506,23 +506,29 @@ code {
   margin-top: 7px;
 }
 
-.urlCell {
+.urlCell,
+.recordCell {
   min-width: 0;
 }
 
 .urlCell a,
-.urlCell small {
+.urlCell small,
+.recordCell a,
+.recordCell small {
   display: block;
 }
 
-.urlCell {
+.urlCell,
+.recordCell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 48px;
   gap: 8px;
   align-items: center;
 }
 
-.urlCell a {
+.urlCell a,
+.recordCell a,
+.miniLinkLine a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -531,11 +537,15 @@ code {
   font-size: 13px;
 }
 
-.urlCell a:hover {
+.urlCell a:hover,
+.recordCell a:hover,
+.miniLinkLine a:hover {
   text-decoration: underline;
 }
 
-.urlCell button {
+.urlCell button,
+.recordCell button,
+.miniLinkLine button {
   height: 28px;
   border: 1px solid #cfd7e6;
   border-radius: 7px;
@@ -545,8 +555,27 @@ code {
   font-weight: 800;
 }
 
-.urlCell small {
+.urlCell small,
+.recordCell small {
   grid-column: 1 / -1;
+}
+
+.linkListCell {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.miniLinkLine {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 8px;
+}
+
+.miniLinkLine span {
+  color: #ef4444;
+  font-weight: 800;
 }
 
 .orderEditForm {
