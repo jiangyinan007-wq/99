@@ -17,9 +17,10 @@ type RechargeLink = {
 
 type CreateOrder = {
   id: string
-  target: string
+  accountId: string
   sids: string[]
   country: string
+  channel: string
   creator: string
   createdAt: string
   links: RechargeLink[]
@@ -28,9 +29,10 @@ type CreateOrder = {
 const initialOrders: CreateOrder[] = [
   {
     id: 'FORM-240701-003',
-    target: '越南代理 A 组',
+    accountId: '8301124',
     sids: ['8301124', '8301188', '8301299'],
     country: 'VN',
+    channel: 'payermax',
     creator: 'Mia',
     createdAt: '2026-07-01 13:42',
     links: [
@@ -56,9 +58,10 @@ const initialOrders: CreateOrder[] = [
   },
   {
     id: 'FORM-240701-002',
-    target: '巴西活动白名单',
+    accountId: '7620100',
     sids: ['7620100', '7620123'],
     country: 'BR',
+    channel: 'airwalex',
     creator: 'Kai',
     createdAt: '2026-07-01 11:18',
     links: [
@@ -75,9 +78,10 @@ const initialOrders: CreateOrder[] = [
   },
   {
     id: 'FORM-240630-009',
-    target: '测试回归账号',
+    accountId: '9000101',
     sids: ['9000101'],
     country: 'ID',
+    channel: 'haipay',
     creator: 'Chen',
     createdAt: '2026-06-30 20:07',
     links: [
@@ -95,6 +99,7 @@ const initialOrders: CreateOrder[] = [
 ]
 
 const countryOptions = ['VN', 'BR', 'ID', 'TH', 'PH', 'MY', 'MX', 'TR']
+const channelOptions = ['payermax', 'airwalex', 'haipay']
 
 function normalizeSids(raw: string) {
   return raw
@@ -111,13 +116,17 @@ function App() {
   const [orders, setOrders] = useState(initialOrders)
   const [pageMode, setPageMode] = useState<PageMode>('list')
   const [selectedOrderId, setSelectedOrderId] = useState(initialOrders[0]?.id ?? '')
-  const [target, setTarget] = useState('')
+  const [accountId, setAccountId] = useState('')
   const [sidInput, setSidInput] = useState('')
   const [country, setCountry] = useState('ID')
+  const [channel, setChannel] = useState('payermax')
   const [quantity, setQuantity] = useState(1)
   const [appendQuantity, setAppendQuantity] = useState(1)
-  const [editingSids, setEditingSids] = useState(false)
+  const [editingOrder, setEditingOrder] = useState(false)
+  const [editAccountId, setEditAccountId] = useState('')
   const [editSidInput, setEditSidInput] = useState('')
+  const [editCountry, setEditCountry] = useState('ID')
+  const [editChannel, setEditChannel] = useState('payermax')
   const [filter, setFilter] = useState<'全部' | LinkStatus>('全部')
   const [copied, setCopied] = useState('')
 
@@ -164,9 +173,10 @@ function App() {
   }
 
   function startCreate() {
-    setTarget('')
+    setAccountId('')
     setSidInput('')
     setCountry('ID')
+    setChannel('payermax')
     setQuantity(1)
     setPageMode('create')
   }
@@ -175,15 +185,16 @@ function App() {
     event.preventDefault()
 
     const sids = normalizeSids(sidInput)
-    if (!target.trim() || sids.length === 0 || !country.trim()) return
+    if (!accountId.trim() || sids.length === 0 || !country.trim() || !channel.trim()) return
 
     const stamp = makeStamp()
     const orderId = `FORM-260701-${String(orders.length + 1).padStart(3, '0')}`
     const nextOrder: CreateOrder = {
       id: orderId,
-      target: target.trim(),
+      accountId: accountId.trim(),
       sids,
       country: country.trim().toUpperCase(),
+      channel,
       creator: '当前用户',
       createdAt: stamp,
       links: createLinkBatch(country.trim().toUpperCase(), quantity, allLinks.length + 1, stamp),
@@ -200,30 +211,44 @@ function App() {
     const order = orders.find((item) => item.id === orderId)
     setSelectedOrderId(orderId)
     setAppendQuantity(1)
-    setEditingSids(false)
+    setEditingOrder(false)
+    setEditAccountId(order?.accountId ?? '')
     setEditSidInput(order?.sids.join(', ') ?? '')
+    setEditCountry(order?.country ?? 'ID')
+    setEditChannel(order?.channel ?? 'payermax')
     setPageMode('detail')
   }
 
-  function startEditSids() {
+  function startEditOrder() {
     if (!selectedOrder) return
+    setEditAccountId(selectedOrder.accountId)
     setEditSidInput(selectedOrder.sids.join(', '))
-    setEditingSids(true)
+    setEditCountry(selectedOrder.country)
+    setEditChannel(selectedOrder.channel)
+    setEditingOrder(true)
   }
 
-  function saveSids(event: FormEvent<HTMLFormElement>) {
+  function saveOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedOrder) return
 
     const nextSids = normalizeSids(editSidInput)
-    if (nextSids.length === 0) return
+    if (!editAccountId.trim() || nextSids.length === 0) return
 
     setOrders((current) =>
       current.map((order) =>
-        order.id === selectedOrder.id ? { ...order, sids: nextSids } : order,
+        order.id === selectedOrder.id
+          ? {
+              ...order,
+              accountId: editAccountId.trim(),
+              sids: nextSids,
+              country: editCountry,
+              channel: editChannel,
+            }
+          : order,
       ),
     )
-    setEditingSids(false)
+    setEditingOrder(false)
   }
 
   function appendLinks(event: FormEvent<HTMLFormElement>) {
@@ -375,26 +400,28 @@ function App() {
           </div>
         </header>
 
-        <section className="metrics" aria-label="链接概况">
-          <div>
-            <span>创建单数</span>
-            <strong>{orders.length}</strong>
-          </div>
-          <div>
-            <span>链接总数</span>
-            <strong>{allLinks.length}</strong>
-          </div>
-          <div>
-            <span>使用中 / 已禁用</span>
-            <strong>
-              {activeCount} / {disabledCount}
-            </strong>
-          </div>
-          <div>
-            <span>流水笔数</span>
-            <strong>{totalOrders}</strong>
-          </div>
-        </section>
+        {pageMode !== 'detail' && (
+          <section className="metrics" aria-label="链接概况">
+            <div>
+              <span>创建单数</span>
+              <strong>{orders.length}</strong>
+            </div>
+            <div>
+              <span>链接总数</span>
+              <strong>{allLinks.length}</strong>
+            </div>
+            <div>
+              <span>使用中 / 已禁用</span>
+              <strong>
+                {activeCount} / {disabledCount}
+              </strong>
+            </div>
+            <div>
+              <span>流水笔数</span>
+              <strong>{totalOrders}</strong>
+            </div>
+          </section>
+        )}
 
         {pageMode === 'create' && (
           <section className="createFlow">
@@ -408,11 +435,11 @@ function App() {
               </div>
 
               <label>
-                使用对象
+                账户 ID
                 <input
-                  value={target}
-                  onChange={(event) => setTarget(event.target.value)}
-                  placeholder="例如：越南代理 A 组"
+                  value={accountId}
+                  onChange={(event) => setAccountId(event.target.value)}
+                  placeholder="例如：8301124"
                   required
                 />
               </label>
@@ -438,7 +465,7 @@ function App() {
 
               <div className="formGrid">
                 <label>
-                  指定充值商品国家
+                  充值商品国家
                   <select value={country} onChange={(event) => setCountry(event.target.value)}>
                     {countryOptions.map((item) => (
                       <option key={item} value={item}>
@@ -448,6 +475,19 @@ function App() {
                   </select>
                 </label>
 
+                <label>
+                  充值渠道
+                  <select value={channel} onChange={(event) => setChannel(event.target.value)}>
+                    {channelOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="formGrid">
                 <label>
                   生成数量
                   <input
@@ -479,8 +519,12 @@ function App() {
               </div>
               <div className="previewCard">
                 <span className="status activeStatus">使用中</span>
-                <strong>{target || '未填写使用对象'}</strong>
+                <strong>{accountId || '未填写账户 ID'}</strong>
                 <dl>
+                  <div>
+                    <dt>充值渠道</dt>
+                    <dd>{channel}</dd>
+                  </div>
                   <div>
                     <dt>国家</dt>
                     <dd>{country} 国家码</dd>
@@ -500,11 +544,11 @@ function App() {
         )}
 
         {pageMode === 'detail' && selectedOrder && (
-          <section className="detailLayout">
+          <section className="detailLayout singleDetail">
             <section className="orderPanel">
               <div className="panelHeader">
                 <div>
-                  <h2>{selectedOrder.target}</h2>
+                  <h2>{selectedOrder.accountId}</h2>
                   <p>
                     {selectedOrder.id} · 创建人 {selectedOrder.creator} · {selectedOrder.createdAt}
                   </p>
@@ -512,73 +556,94 @@ function App() {
                 <span className="badge">{selectedOrder.links.length} 条链接</span>
               </div>
 
-              <div className="orderSummary">
-                <div>
-                  <div className="summaryTitle">
-                    <span>账户 SID</span>
-                    {!editingSids && (
-                      <button type="button" onClick={startEditSids}>
-                        编辑 SID
+              <form className="orderEditForm" onSubmit={saveOrder}>
+                <label>
+                  账户 ID
+                  <input
+                    value={editAccountId}
+                    onChange={(event) => setEditAccountId(event.target.value)}
+                    disabled={!editingOrder}
+                    required
+                  />
+                </label>
+                <label>
+                  账户 SID
+                  <textarea
+                    value={editSidInput}
+                    onChange={(event) => setEditSidInput(event.target.value)}
+                    disabled={!editingOrder}
+                    rows={3}
+                    required
+                  />
+                </label>
+                <label>
+                  充值商品国家
+                  <select
+                    value={editingOrder ? editCountry : selectedOrder.country}
+                    onChange={(event) => setEditCountry(event.target.value)}
+                    disabled={!editingOrder}
+                  >
+                    {countryOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item} 国家码
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  充值渠道
+                  <select
+                    value={editingOrder ? editChannel : selectedOrder.channel}
+                    onChange={(event) => setEditChannel(event.target.value)}
+                    disabled={!editingOrder}
+                  >
+                    {channelOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="inlineActions">
+                  {editingOrder ? (
+                    <>
+                      <button type="button" className="ghostButton" onClick={() => setEditingOrder(false)}>
+                        取消
                       </button>
-                    )}
-                  </div>
-                  {editingSids ? (
-                    <form className="sidEditForm" onSubmit={saveSids}>
-                      <textarea
-                        value={editSidInput}
-                        onChange={(event) => setEditSidInput(event.target.value)}
-                        rows={3}
-                        required
-                      />
-                      <div className="inlineActions">
-                        <button type="button" className="ghostButton" onClick={() => setEditingSids(false)}>
-                          取消
-                        </button>
-                        <button type="submit" className="primaryButton">
-                          保存 SID
-                        </button>
-                      </div>
-                    </form>
+                      <button type="submit" className="primaryButton">
+                        保存
+                      </button>
+                    </>
                   ) : (
-                    <div className="sidLine">
-                      {selectedOrder.sids.map((sid) => (
-                        <span key={sid}>{sid}</span>
-                      ))}
-                    </div>
+                    <button type="button" className="ghostButton" onClick={startEditOrder}>
+                      编辑创建单
+                    </button>
                   )}
                 </div>
-                <div>
-                  <span>指定国家</span>
-                  <strong>{selectedOrder.country}</strong>
-                </div>
-              </div>
+              </form>
 
-              {renderLinkTable(selectedOrder)}
-            </section>
-
-            <aside className="appendPanel">
-              <div className="panelHeader">
+              <div className="linkSectionHeader">
                 <div>
-                  <h2>继续生成链接</h2>
-                  <p>复用当前创建单的对象、SID 和国家码。</p>
+                  <h2>充值链接</h2>
+                  <p>同一个创建单下的链接集中维护。</p>
                 </div>
-              </div>
-              <form onSubmit={appendLinks}>
-                <label>
-                  本次新增数量
+                <form className="appendInlineForm" onSubmit={appendLinks}>
                   <input
+                    aria-label="本次新增数量"
                     type="number"
                     min="1"
                     max="10"
                     value={appendQuantity}
                     onChange={(event) => setAppendQuantity(Math.max(1, Number(event.target.value)))}
                   />
-                </label>
-                <button type="submit" className="wideButton">
-                  在此创建单中继续生成
-                </button>
-              </form>
-            </aside>
+                  <button type="submit" className="primaryButton">
+                    新增链接
+                  </button>
+                </form>
+              </div>
+
+              {renderLinkTable(selectedOrder)}
+            </section>
           </section>
         )}
 
@@ -587,7 +652,7 @@ function App() {
             <div className="panelHeader">
               <div>
                 <h2>非标渠道列表</h2>
-                <p>每个创建单集中管理它生成的多条充值链接。</p>
+                <p>按创建单维护账户、商品国家、充值渠道和链接状态。</p>
               </div>
               <div className="segmented" aria-label="状态筛选">
                 {(['全部', '使用中', '已禁用'] as const).map((item) => (
@@ -605,9 +670,10 @@ function App() {
 
             <div className="orderTable">
               <div className="orderTableHead">
-                <span>使用对象</span>
+                <span>账户 ID</span>
                 <span>账户 SID</span>
-                <span>国家</span>
+                <span>商品国家</span>
+                <span>充值渠道</span>
                 <span>链接数</span>
                 <span>充值链接</span>
                 <span>流水记录</span>
@@ -622,7 +688,7 @@ function App() {
                 return (
                   <article className="orderTableRow" key={order.id}>
                     <div className="targetCell">
-                      <strong>{order.target}</strong>
+                      <strong>{order.accountId}</strong>
                       <code>{order.id}</code>
                       <small>
                         创建人 {order.creator} · {order.createdAt}
@@ -636,6 +702,7 @@ function App() {
                     </div>
 
                     <div className="countryCell">{order.country}</div>
+                    <div className="channelCell">{order.channel}</div>
                     <div className="countCell">
                       <strong>{order.links.length}</strong>
                       <small>条链接</small>

@@ -208,6 +208,10 @@ button {
   align-items: start;
 }
 
+.singleDetail {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .createPanel,
 .listPanel,
 .previewPanel,
@@ -279,6 +283,14 @@ textarea:focus,
 select:focus {
   border-color: #1463ff;
   box-shadow: 0 0 0 3px rgba(20, 99, 255, 0.12);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background: #f8fafc;
+  color: #172033;
+  opacity: 1;
 }
 
 .sidPreview,
@@ -390,8 +402,8 @@ code {
 .orderTableRow {
   display: grid;
   grid-template-columns:
-    minmax(170px, 1fr) minmax(150px, 0.9fr) 62px 72px minmax(160px, 1fr)
-    minmax(160px, 1fr) 110px 74px;
+    minmax(150px, 0.85fr) minmax(150px, 0.9fr) 86px 100px 72px minmax(150px, 1fr)
+    minmax(150px, 1fr) 110px 74px;
   gap: 12px;
   align-items: center;
 }
@@ -443,9 +455,14 @@ code {
 }
 
 .countryCell,
+.channelCell,
 .countCell strong {
   color: #172033;
   font-weight: 800;
+}
+
+.channelCell {
+  text-transform: lowercase;
 }
 
 .nestedLinkTable {
@@ -532,42 +549,33 @@ code {
   grid-column: 1 / -1;
 }
 
-.summaryTitle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+.orderEditForm {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.4fr) minmax(160px, 0.7fr) minmax(160px, 0.7fr);
+  gap: 14px;
+  border: 1px solid #e5ebf3;
+  border-radius: 8px;
+  background: #fbfcff;
+  padding: 14px;
+  margin-bottom: 14px;
 }
 
-.summaryTitle span {
+.orderEditForm label {
   margin-bottom: 0;
 }
 
-.summaryTitle button {
-  height: 28px;
-  border: 1px solid #cfd7e6;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #344054;
-  padding: 0 10px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.sidEditForm {
-  display: grid;
-  gap: 10px;
-}
-
-.sidEditForm textarea {
-  min-height: 72px;
+.orderEditForm textarea {
+  min-height: 40px;
 }
 
 .inlineActions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.orderEditForm .inlineActions {
+  grid-column: 1 / -1;
 }
 
 .inlineActions .ghostButton,
@@ -584,6 +592,30 @@ code {
   background: #fbfcff;
   padding: 14px;
   margin-bottom: 14px;
+}
+
+.linkSectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 12px;
+}
+
+.linkSectionHeader p {
+  color: #667085;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.appendInlineForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.appendInlineForm input {
+  width: 96px;
 }
 
 .orderSummary span {
@@ -689,7 +721,11 @@ code {
   .linkItemRow,
   .orderTableHead,
   .orderTableRow {
-    min-width: 760px;
+    min-width: 980px;
+  }
+
+  .orderEditForm {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -700,7 +736,9 @@ code {
 
   .topbar,
   .panelHeader,
-  .formActions {
+  .formActions,
+  .linkSectionHeader,
+  .appendInlineForm {
     flex-direction: column;
     align-items: stretch;
   }
@@ -721,7 +759,12 @@ code {
     width: 100%;
   }
 
-  .orderSummary {
+  .orderSummary,
+  .orderEditForm {
     grid-template-columns: 1fr;
+  }
+
+  .appendInlineForm input {
+    width: 100%;
   }
 }
